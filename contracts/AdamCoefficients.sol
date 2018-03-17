@@ -10,6 +10,14 @@ contract AdamCoefficients {
     // a list of coefficients grouped by UUID of related entity
     mapping (bytes16 => mapping (uint16 => int64)) public coefficients;
 
+    // stores a list of system addresses who have access to crucial functionality
+    SystemOwner public systemOwner;
+
+    // check that sender actually has access to crucial functionality
+    modifier onlyOwner() {
+        require(systemOwner.isOwner(msg.sender));
+        _;
+    }
 
     /**
     * @param systemOwnerAddress ethereum address of the access control smart-contract
@@ -18,6 +26,14 @@ contract AdamCoefficients {
         systemOwner = SystemOwner(systemOwnerAddress);
     }
 
+    /**
+    * Set new ethereum address of the access control smart-contract
+    *
+    * @param systemOwnerAddress ethereum address of the access control smart-contract
+    */
+    function setSystemOwner(address systemOwnerAddress) public onlyOwner {
+        systemOwner = SystemOwner(systemOwnerAddress);
+    }
 
     /**
     * Set the related entity coefficients used to tune neural network models
