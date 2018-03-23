@@ -1,7 +1,7 @@
 pragma solidity ^0.4.23;
 
 // common zeppelin includes
-import './zeppelin/math/SafeMath.sol';
+import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 
 // ubex-related includes
 import './SystemOwner.sol';
