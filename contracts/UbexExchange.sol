@@ -20,6 +20,7 @@ contract UbexExchange {
     UbexStorage public store;
 
     event PublisherCreated(bytes16 indexed id, address indexed owner);
+    event AdvertiserCreated(bytes16 indexed id, address indexed owner);
 
     // check that sender actually has access to crucial functionality
     modifier onlyOwner() {
@@ -77,4 +78,23 @@ contract UbexExchange {
         emit PublisherCreated(id, owner);
     }
 
+    /**
+    * Create new advertiser account and store its data to the system storage smart-contract
+    *
+    * @param id UUID of the advertiser, should be unique withing a system
+    * @param owner ethereum address of the advertiser (actually receiver of the UBEX tokens)
+    * @param name name of the advertiser for visual identification by the system participants
+    * @param details details of the advertiser, ideally an URL with the full data available
+    * @param rank initial system rank of the advertiser
+    * @param state initial status of the advertiser (should be New in most cases)
+    */
+    function createAdvertiser(bytes16 id, address owner, string name, string details, UbexStorage.Rank rank, UbexStorage.State state) public onlyOwner {
+        UbexStorage.State _state;
+        (, _state) = store.users(id);
+        require(_state == UbexStorage.State.Unknown);
+
+        store.setUser(id, owner, UbexStorage.Role.Advertiser, name, details, rank, state);
+
+        emit AdvertiserCreated(id, owner);
+    }
 }
