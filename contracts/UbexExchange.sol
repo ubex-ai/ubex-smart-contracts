@@ -6,6 +6,7 @@ import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 // ubex-related includes
 import './SystemOwner.sol';
 import './UbexStorage.sol';
+import './AdamCoefficients.sol';
 
 /**
  * @title UbexExchange
@@ -18,6 +19,8 @@ contract UbexExchange {
     SystemOwner public systemOwner;
     // separate contract for system data storage
     UbexStorage public store;
+    // neural network coefficients related to particular entity
+    AdamCoefficients public coeff;
 
     event PublisherCreated(bytes16 indexed id, address indexed owner);
     event AdvertiserCreated(bytes16 indexed id, address indexed owner);
@@ -30,13 +33,16 @@ contract UbexExchange {
 
     /**
     * @param storageAddress ethereum address of the storage smart-contract
+    * @param coeffAddress ethereum address of the neural network coefficients smart-contract
     * @param systemOwnerAddress ethereum address of the access control smart-contract
     */
     function UbexExchange(
     address storageAddress,
+    address coeffAddress,
     address systemOwnerAddress
     ) public {
         store = UbexStorage(storageAddress);
+        coeff = AdamCoefficients(coeffAddress);
         systemOwner = SystemOwner(systemOwnerAddress);
     }
 
@@ -76,6 +82,35 @@ contract UbexExchange {
         store.setUser(id, owner, UbexStorage.Role.Publisher, name, details, rank, state);
 
         emit PublisherCreated(id, owner);
+    }
+
+    /**
+        * Set the existing publisher's coefficients used to tune neural network models
+        *
+        * @param id UUID of the publisher
+        * @param coeffs a list of coefficients of int64 type (denormalise to int64 max value)
+        */
+    function setPublisherCoeffs(bytes16 id, int64[] coeffs) public onlyOwner {
+        UbexStorage.State _state;
+        (, _state) = store.users(id);
+        require(_state != UbexStorage.State.Unknown);
+
+        coeff.setCoefficients(id, coeffs);
+    }
+
+    /**
+    * Get the existing publisher's coefficient used to tune neural network models
+    *
+    * @param id UUID of the publisher
+    * @param index coefficient index
+    * @return int64 value (use tanh function for normalization)
+    */
+    function getPublisherCoeff(bytes16 id, uint16 index) public constant returns (int64) {
+        UbexStorage.State _state;
+        (, _state) = store.users(id);
+        require(_state != UbexStorage.State.Unknown);
+
+        return coeff.coefficients(id, index);
     }
 
     /**
