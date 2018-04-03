@@ -132,4 +132,33 @@ contract UbexExchange {
 
         emit AdvertiserCreated(id, owner);
     }
+
+    /**
+        * Set the existing advertiser's coefficients used to tune neural network models
+        *
+        * @param id UUID of the advertiser
+        * @param coeffs a list of coefficients of int64 type (denormalise to int64 max value)
+        */
+    function setAdvertiserCoeffs(bytes16 id, int64[] coeffs) public onlyOwner {
+        UbexStorage.State _state;
+        (, _state) = store.users(id);
+        require(_state != UbexStorage.State.Unknown);
+
+        coeff.setCoefficients(id, coeffs);
+    }
+
+    /**
+    * Get the existing advertiser's coefficient used to tune neural network models
+    *
+    * @param id UUID of the advertiser
+    * @param index coefficient index
+    * @return int64 value (use tanh function for normalization)
+    */
+    function getAdvertiserCoeff(bytes16 id, uint16 index) public constant returns (int64) {
+        UbexStorage.State _state;
+        (, _state) = store.users(id);
+        require(_state != UbexStorage.State.Unknown);
+
+        return coeff.coefficients(id, index);
+    }
 }
