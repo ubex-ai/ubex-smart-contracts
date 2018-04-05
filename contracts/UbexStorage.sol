@@ -31,8 +31,28 @@ contract UbexStorage {
         State state;
     }
 
+    // publishing space data structure
+    struct AdSpace {
+        // unix timestamp
+        uint created;
+        // the UUID of the user who owns this space
+        bytes16 owner;
+        // visual representation of the space
+        string name;
+        // the URL of the website providing publishing space
+        string url;
+        // the full details of the space
+        string details;
+        // a list of advertising category ids the space can accept for publishing
+        uint16[] categories;
+        // publishing space state
+        State state;
+    }
+
     // list of users
     mapping (bytes16 => User) public users;
+    // list of advertising spaces
+    mapping (bytes16 => AdSpace) public adSpaces;
 
     // stores a list of system addresses who have access to crucial functionality
     SystemOwner public systemOwner;
@@ -91,6 +111,42 @@ contract UbexStorage {
                 details : (bytes(details).length == 0) ? users[id].details : details,
                 rank : (rank == Rank.NotSet) ? users[id].rank : rank,
                 state : (state == State.Unknown) ? users[id].state : state
+            });
+        }
+    }
+
+    /**
+    * Set the advertising space data
+    * if any param comes with a default data value it will not be updated
+    *
+    * @param id UUID of the advertising space
+    * @param owner UUID of the user who owns this space
+    * @param name visual representation of the space
+    * @param url URL of the website providing publishing space
+    * @param details full details of the space
+    * @param categories a list of advertising category ids the space can accept for publishing
+    * @param state status of the advertising space
+    */
+    function setAdSpace(bytes16 id, bytes16 owner, string name, string url, string details, uint16[] categories, State state) public onlyOwner {
+        if (adSpaces[id].state == State.Unknown) {
+            adSpaces[id] = AdSpace({
+            created : now,
+            owner : owner,
+            name : name,
+            url : url,
+            details : details,
+            categories : categories,
+            state : state
+            });
+        } else {
+            adSpaces[id] = AdSpace({
+            created : adSpaces[id].created,
+            owner : (owner.length == 0) ? adSpaces[id].owner : owner,
+            name : (bytes(name).length == 0) ? adSpaces[id].name : name,
+            url : (bytes(url).length == 0) ? adSpaces[id].url : url,
+            details : (bytes(details).length == 0) ? adSpaces[id].details : details,
+            categories : (categories.length == 0) ? adSpaces[id].categories : categories,
+            state : (state == State.Unknown) ? adSpaces[id].state : state
             });
         }
     }
