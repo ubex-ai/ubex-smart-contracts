@@ -24,6 +24,7 @@ contract UbexExchange {
 
     event PublisherCreated(bytes16 indexed id, address indexed owner);
     event AdvertiserCreated(bytes16 indexed id, address indexed owner);
+    event AdSpaceCreated(bytes16 indexed id, bytes16 indexed owner);
 
     // check that sender actually has access to crucial functionality
     modifier onlyOwner() {
@@ -160,5 +161,26 @@ contract UbexExchange {
         require(_state != UbexStorage.State.Unknown);
 
         return coeff.coefficients(id, index);
+    }
+
+    /**
+       * Create new publishing space and store its data to the system storage smart-contract
+       *
+       * @param id UUID of the publishing space, should be unique withing a system
+       * @param owner UUID of the user who owns this space
+       * @param name visual representation of the space
+       * @param url URL of the website providing publishing space
+       * @param details full details of the space
+       * @param categories a list of advertising category ids the space can accept for publishing
+       * @param state status of the advertising space
+       */
+    function createAdSpace(bytes16 id, bytes16 owner, string name, string url, string details, uint16[] categories, UbexStorage.State state) public onlyOwner {
+        UbexStorage.State _state;
+        (, _state) = store.adSpaces(id);
+        require(_state == UbexStorage.State.Unknown);
+
+        store.setAdSpace(id, owner, name, url, details, categories, state);
+
+        emit AdSpaceCreated(id, owner);
     }
 }
