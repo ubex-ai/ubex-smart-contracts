@@ -49,10 +49,32 @@ contract UbexStorage {
         State state;
     }
 
+    // advertiser offer data structure
+    struct Offer {
+        // unix timestamp
+        uint created;
+        // the UUID of the user who owns this offer
+        bytes16 owner;
+        // visual representation of the offer
+        string name;
+        // the base unit price of the display of promoted ad
+        uint256 hitPrice;
+        // the base unit price of actions undertaking by promoted ad
+        uint256 actionPrice;
+        // the full details of the offer
+        string details;
+        // a list of advertising category ids the offer can be associated with
+        uint16[] categories;
+        // advertiser offer state
+        State state;
+    }
+
     // list of users
     mapping (bytes16 => User) public users;
     // list of advertising spaces
     mapping (bytes16 => AdSpace) public adSpaces;
+    // list of advertiser offers
+    mapping (bytes16 => Offer) public offers;
 
     // stores a list of system addresses who have access to crucial functionality
     SystemOwner public systemOwner;
@@ -147,6 +169,46 @@ contract UbexStorage {
             details : (bytes(details).length == 0) ? adSpaces[id].details : details,
             categories : (categories.length == 0) ? adSpaces[id].categories : categories,
             state : (state == State.Unknown) ? adSpaces[id].state : state
+            });
+        }
+    }
+
+
+    /**
+    * Set the advertiser offer data
+    * if any param comes with a default data value it will not be updated
+    *
+    * @param id UUID of the advertiser offer
+    * @param owner UUID of the user who owns this offer
+    * @param name visual representation of the offer
+    * @param hitPrice the base unit price of the display of promoted ad
+    * @param actionPrice the base unit price of actions undertaking by promoted ad
+    * @param details full details of the offer
+    * @param categories a list of advertising category ids the offer can be associated with
+    * @param state status of the advertiser offer
+    */
+    function setOffer(bytes16 id, bytes16 owner, string name, uint256 hitPrice, uint256 actionPrice, string details, uint16[] categories, State state) public onlyOwner {
+        if (offers[id].state == State.Unknown) {
+            offers[id] = Offer({
+            created : now,
+            owner : owner,
+            name : name,
+            hitPrice : hitPrice,
+            actionPrice : actionPrice,
+            details : details,
+            categories : categories,
+            state : state
+            });
+        } else {
+            offers[id] = Offer({
+            created : offers[id].created,
+            owner : (owner.length == 0) ? offers[id].owner : owner,
+            name : (bytes(name).length == 0) ? offers[id].name : name,
+            hitPrice : (hitPrice < 0) ? offers[id].hitPrice : hitPrice,
+            actionPrice : (actionPrice < 0) ? offers[id].actionPrice : actionPrice,
+            details : (bytes(details).length == 0) ? offers[id].details : details,
+            categories : (categories.length == 0) ? offers[id].categories : categories,
+            state : (state == State.Unknown) ? offers[id].state : state
             });
         }
     }
