@@ -14,6 +14,8 @@ contract UbexStorage {
     enum State {Unknown, New, Active, InProgress, Finished, Rejected}
     // the role of the user
     enum Role {Undefined, Publisher, Advertiser}
+    // the hit types
+    enum HitType {Undefined, Display, Action}
 
     // user's data structure
     struct User {
@@ -66,6 +68,28 @@ contract UbexStorage {
         // a list of advertising category ids the offer can be associated with
         uint16[] categories;
         // advertiser offer state
+        State state;
+    }
+
+    // advertising hit (display or action) data structure
+    struct Hit {
+        // unix timestamp
+        uint created;
+        // the type of the hit
+        HitType hitType;
+        // the UUID of the session the hit was performed by
+        bytes16 session;
+        // the UUID of the advertising space the hit was displayed on
+        bytes16 space;
+        // the UUID of the offer the hit was displayed for
+        bytes16 offer;
+        // the UBEX token amount advertiser pays for this hit
+        uint256 amount;
+        // the full details of the hit
+        string details;
+        // a list of advertising category ids the space can accept for publishing
+        uint16[] categories;
+        // hit state
         State state;
     }
 
@@ -209,6 +233,48 @@ contract UbexStorage {
             details : (bytes(details).length == 0) ? offers[id].details : details,
             categories : (categories.length == 0) ? offers[id].categories : categories,
             state : (state == State.Unknown) ? offers[id].state : state
+            });
+        }
+    }
+
+    /**
+        * Set the hit data
+        * if any param comes with a default data value it will not be updated
+        *
+        * @param id UUID of the hit
+        * @param hitType the type of the hit
+        * @param session the UUID of the session the hit was performed by
+        * @param space the UUID of the advertising space the hit was displayed on
+        * @param offer the UUID of the offer the hit was displayed for
+        * @param amount the UBEX token amount advertiser pays for this hit
+        * @param details the full details of the hit
+        * @param categories a list of advertising category ids the space can accept for publishing
+        * @param state status of the hit
+        */
+    function setHit(bytes16 id, HitType hitType, bytes16 session, bytes16 space, bytes16 offer, uint256 amount, string details, uint16[] categories, State state) public onlyOwner {
+        if (hits[id].state == State.Unknown) {
+            hits[id] = Hit({
+            created : now,
+            session : session,
+            space : space,
+            offer : offer,
+            hitType : hitType,
+            amount : amount,
+            details : details,
+            categories : categories,
+            state : state
+            });
+        } else {
+            hits[id] = Hit({
+            created : hits[id].created,
+            session : (session.length == 0) ? hits[id].session : session,
+            space : (space.length == 0) ? hits[id].space : space,
+            offer : (offer.length == 0) ? hits[id].offer : offer,
+            hitType : (hitType == HitType.Undefined) ? hits[id].hitType : hitType,
+            amount : (amount < 0) ? hits[id].amount : amount,
+            details : (bytes(details).length == 0) ? hits[id].details : details,
+            categories : (categories.length == 0) ? hits[id].categories : categories,
+            state : (state == State.Unknown) ? hits[id].state : state
             });
         }
     }
