@@ -26,6 +26,7 @@ contract UbexExchange {
     event AdvertiserCreated(bytes16 indexed id, address indexed owner);
     event AdSpaceCreated(bytes16 indexed id, bytes16 indexed owner);
     event OfferCreated(bytes16 indexed id, bytes16 indexed owner);
+    event HitCreated(bytes16 indexed id, bytes16 indexed offer, uint256 amount);
 
     // check that sender actually has access to crucial functionality
     modifier onlyOwner() {
@@ -205,5 +206,27 @@ contract UbexExchange {
         store.setOffer(id, owner, name, hitPrice, actionPrice, details, categories, state);
 
         emit OfferCreated(id, owner);
+    }
+
+    /**
+        * Create new action hit and store its data to the system storage smart-contract
+        *
+        * @param id UUID of the hit
+        * @param session the UUID of the session the hit was performed by
+        * @param space the UUID of the advertising space the hit was actioned on
+        * @param offer the UUID of the offer the hit was actioned for
+        * @param amount the UBEX token amount advertiser pays for this hit
+        * @param details the full details of the hit
+        * @param categories a list of advertising category ids the space can accept for publishing
+        * @param state status of the hit
+        */
+    function createActionHit(bytes16 id, bytes16 session, bytes16 space, bytes16 offer, uint256 amount, string details, uint16[] categories, UbexStorage.State state) public onlyOwner {
+        UbexStorage.State _state;
+        (, _state) = store.hits(id);
+        require(_state == UbexStorage.State.Unknown);
+
+        store.setHit(id, UbexStorage.HitType.Action, session, space, offer, amount, details, categories, state);
+
+        emit HitCreated(id, offer, amount);
     }
 }
