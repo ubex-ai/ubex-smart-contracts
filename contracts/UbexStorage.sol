@@ -10,6 +10,8 @@ import './SystemOwner.sol';
 contract UbexStorage {
     using SafeMath for uint256;
 
+    // related user rank withing a system
+    enum Rank {NotSet, Untrusted, Known, Trusted, Vedified, Certified, Vip}
     // the status of an entity
     enum State {Unknown, New, Active, InProgress, Finished, Rejected}
     // the role of the user
@@ -29,6 +31,8 @@ contract UbexStorage {
         string name;
         // details of the user (ideally URL to the full details)
         string details;
+        // user's rank withing a system
+        Rank rank;
         // user's state
         State state;
     }
@@ -99,6 +103,8 @@ contract UbexStorage {
     mapping (bytes16 => AdSpace) public adSpaces;
     // list of advertiser offers
     mapping (bytes16 => Offer) public offers;
+    // list of advertising hits (displays or actions)
+    mapping (bytes16 => Hit) public hits;
 
     // stores a list of system addresses who have access to crucial functionality
     SystemOwner public systemOwner;
@@ -176,27 +182,26 @@ contract UbexStorage {
     function setAdSpace(bytes16 id, bytes16 owner, string name, string url, string details, uint16[] categories, State state) public onlyOwner {
         if (adSpaces[id].state == State.Unknown) {
             adSpaces[id] = AdSpace({
-            created : now,
-            owner : owner,
-            name : name,
-            url : url,
-            details : details,
-            categories : categories,
-            state : state
+                created : now,
+                owner : owner,
+                name : name,
+                url : url,
+                details : details,
+                categories : categories,
+                state : state
             });
         } else {
             adSpaces[id] = AdSpace({
-            created : adSpaces[id].created,
-            owner : (owner.length == 0) ? adSpaces[id].owner : owner,
-            name : (bytes(name).length == 0) ? adSpaces[id].name : name,
-            url : (bytes(url).length == 0) ? adSpaces[id].url : url,
-            details : (bytes(details).length == 0) ? adSpaces[id].details : details,
-            categories : (categories.length == 0) ? adSpaces[id].categories : categories,
-            state : (state == State.Unknown) ? adSpaces[id].state : state
+                created : adSpaces[id].created,
+                owner : (owner.length == 0) ? adSpaces[id].owner : owner,
+                name : (bytes(name).length == 0) ? adSpaces[id].name : name,
+                url : (bytes(url).length == 0) ? adSpaces[id].url : url,
+                details : (bytes(details).length == 0) ? adSpaces[id].details : details,
+                categories : (categories.length == 0) ? adSpaces[id].categories : categories,
+                state : (state == State.Unknown) ? adSpaces[id].state : state
             });
         }
     }
-
 
     /**
     * Set the advertiser offer data
@@ -214,67 +219,67 @@ contract UbexStorage {
     function setOffer(bytes16 id, bytes16 owner, string name, uint256 hitPrice, uint256 actionPrice, string details, uint16[] categories, State state) public onlyOwner {
         if (offers[id].state == State.Unknown) {
             offers[id] = Offer({
-            created : now,
-            owner : owner,
-            name : name,
-            hitPrice : hitPrice,
-            actionPrice : actionPrice,
-            details : details,
-            categories : categories,
-            state : state
+                created : now,
+                owner : owner,
+                name : name,
+                hitPrice : hitPrice,
+                actionPrice : actionPrice,
+                details : details,
+                categories : categories,
+                state : state
             });
         } else {
             offers[id] = Offer({
-            created : offers[id].created,
-            owner : (owner.length == 0) ? offers[id].owner : owner,
-            name : (bytes(name).length == 0) ? offers[id].name : name,
-            hitPrice : (hitPrice < 0) ? offers[id].hitPrice : hitPrice,
-            actionPrice : (actionPrice < 0) ? offers[id].actionPrice : actionPrice,
-            details : (bytes(details).length == 0) ? offers[id].details : details,
-            categories : (categories.length == 0) ? offers[id].categories : categories,
-            state : (state == State.Unknown) ? offers[id].state : state
+                created : offers[id].created,
+                owner : (owner.length == 0) ? offers[id].owner : owner,
+                name : (bytes(name).length == 0) ? offers[id].name : name,
+                hitPrice : (hitPrice < 0) ? offers[id].hitPrice : hitPrice,
+                actionPrice : (actionPrice < 0) ? offers[id].actionPrice : actionPrice,
+                details : (bytes(details).length == 0) ? offers[id].details : details,
+                categories : (categories.length == 0) ? offers[id].categories : categories,
+                state : (state == State.Unknown) ? offers[id].state : state
             });
         }
     }
 
     /**
-        * Set the hit data
-        * if any param comes with a default data value it will not be updated
-        *
-        * @param id UUID of the hit
-        * @param hitType the type of the hit
-        * @param session the UUID of the session the hit was performed by
-        * @param space the UUID of the advertising space the hit was displayed on
-        * @param offer the UUID of the offer the hit was displayed for
-        * @param amount the UBEX token amount advertiser pays for this hit
-        * @param details the full details of the hit
-        * @param categories a list of advertising category ids the space can accept for publishing
-        * @param state status of the hit
-        */
+    * Set the hit data
+    * if any param comes with a default data value it will not be updated
+    *
+    * @param id UUID of the hit
+    * @param hitType the type of the hit
+    * @param session the UUID of the session the hit was performed by
+    * @param space the UUID of the advertising space the hit was displayed on
+    * @param offer the UUID of the offer the hit was displayed for
+    * @param amount the UBEX token amount advertiser pays for this hit
+    * @param details the full details of the hit
+    * @param categories a list of advertising category ids the space can accept for publishing
+    * @param state status of the hit
+    */
     function setHit(bytes16 id, HitType hitType, bytes16 session, bytes16 space, bytes16 offer, uint256 amount, string details, uint16[] categories, State state) public onlyOwner {
         if (hits[id].state == State.Unknown) {
             hits[id] = Hit({
-            created : now,
-            session : session,
-            space : space,
-            offer : offer,
-            hitType : hitType,
-            amount : amount,
-            details : details,
-            categories : categories,
-            state : state
+                created : now,
+                session : session,
+                space : space,
+                offer : offer,
+                hitType : hitType,
+                amount : amount,
+                details : details,
+                categories : categories,
+                state : state
             });
         } else {
             hits[id] = Hit({
-            created : hits[id].created,
-            session : (session.length == 0) ? hits[id].session : session,
-            space : (space.length == 0) ? hits[id].space : space,
-            offer : (offer.length == 0) ? hits[id].offer : offer,
-            hitType : (hitType == HitType.Undefined) ? hits[id].hitType : hitType,
-            amount : (amount < 0) ? hits[id].amount : amount,
-            details : (bytes(details).length == 0) ? hits[id].details : details,
-            categories : (categories.length == 0) ? hits[id].categories : categories,
-            state : (state == State.Unknown) ? hits[id].state : state
+                created : hits[id].created,
+                session : (session.length == 0) ? hits[id].session : session,
+                space : (space.length == 0) ? hits[id].space : space,
+                offer : (offer.length == 0) ? hits[id].offer : offer,
+                hitType : (hitType == HitType.Undefined) ? hits[id].hitType : hitType,
+                amount : (amount < 0) ? hits[id].amount : amount,
+                details : (bytes(details).length == 0) ? hits[id].details : details,
+                categories : (categories.length == 0) ? hits[id].categories : categories,
+                state : (state == State.Unknown) ? hits[id].state : state
             });
         }
     }
