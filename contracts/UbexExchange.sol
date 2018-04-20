@@ -441,5 +441,21 @@ contract UbexExchange {
         store.setHit(id, UbexStorage.HitType.Action, session, space, offer, amount, details, categories, state);
     }
 
+    /**
+    * Transact existing hit and send UBEX tokens from advertiser to publisher
+    *
+    * @param id UUID of the hit
+    * @param amount the UBEX token amount advertiser pays for this hit
+    */
+    function transactHit(bytes16 id, uint256 amount) public onlyOwner {
+        UbexStorage.State _state;
+        (, _state) = store.hits(id);
+        require(_state != UbexStorage.State.Unknown && _state != UbexStorage.State.Rejected && _state != UbexStorage.State.Finished);
 
+        store.setHit(id, UbexStorage.HitType.Undefined, 0, 0, 0, amount, "", new uint16[](0), UbexStorage.State.Finished);
+
+        // TODO: transact UBEX tokens after token smart-contract implementation
+
+        emit HitTransacted(id, amount);
+    }
 }
