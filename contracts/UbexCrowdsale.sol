@@ -53,6 +53,13 @@ contract UbexCrowdsale is Crowdsale, Ownable {
     }
 
     /**
+     * @dev Withdraw tokens axcess on the contract after crowdsale.
+     */
+    function postCrowdsaleWithdraw(uint256 _tokenAmount) public onlyOwner {
+        token.transfer(wallet, _tokenAmount);
+    }
+
+    /**
      * @dev Withdraw tokens for receiver_ after crowdsale ends.
      */
     function _withdrawTokensFor(address receiver_) internal {
