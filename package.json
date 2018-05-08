@@ -1,4 +1,7 @@
 {
+  "name": "ubex-smart-contracts",
+  "version": "0.2.6",
+  "private": true,
   "dependencies": {
     "zeppelin-solidity": "^1.3.0"
   }
