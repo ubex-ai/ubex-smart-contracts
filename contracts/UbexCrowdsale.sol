@@ -1,8 +1,8 @@
 pragma solidity ^0.4.23;
 
-import "zeppelin-solidity/contracts/crowdsale/Crowdsale.sol";
-import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
-import 'zeppelin-solidity/contracts/math/SafeMath.sol';
+import "./zeppelin/crowdsale/Crowdsale.sol";
+import './zeppelin/ownership/Ownable.sol';
+import './zeppelin/math/SafeMath.sol';
 
 /**
  * @title UbexCrowdsale
@@ -17,7 +17,7 @@ contract UbexCrowdsale is Crowdsale, Ownable {
     // Amount of issued tokens
     uint256 public tokensIssued;
 
-    // bonus tokens rate multiplier x1000 (i.e. 1200 is +20% = 1.2 = 1200 / 1000)
+    // Bonus tokens rate multiplier x1000 (i.e. 1200 is 1.2 x 1000 = 120% x1000 = +20% bonus)
     uint256 public bonusMultiplier;
 
     // Is a crowdsale closed?
@@ -29,6 +29,13 @@ contract UbexCrowdsale is Crowdsale, Ownable {
      * @param amount amount of tokens sent
      */
     event TokenDelivered(address indexed receiver, uint256 amount);
+
+    /**
+   * Event for token adding by referral program
+   * @param beneficiary who got the tokens
+   * @param amount amount of tokens added
+   */
+    event TokenAdded(address indexed beneficiary, uint256 amount);
 
     /**
     * Init crowdsale by setting its params
@@ -64,6 +71,7 @@ contract UbexCrowdsale is Crowdsale, Ownable {
      * @param _tokenAmount Amount of tokens purchased
      */
     function _processPurchase(address _beneficiary, uint256 _tokenAmount) internal {
+        require(!hasClosed());
         balances[_beneficiary] = balances[_beneficiary].add(_tokenAmount);
         tokensIssued = tokensIssued.add(_tokenAmount);
     }
@@ -111,6 +119,17 @@ contract UbexCrowdsale is Crowdsale, Ownable {
      */
     function postCrowdsaleWithdraw(uint256 _tokenAmount) public onlyOwner {
         token.transfer(wallet, _tokenAmount);
+    }
+
+    /**
+     * @dev Add tokens for specified beneficiary (referral system tokens, for example).
+     * @param _beneficiary Token purchaser
+     * @param _tokenAmount Amount of tokens added
+     */
+    function addTokens(address _beneficiary, uint256 _tokenAmount) public onlyOwner {
+        balances[_beneficiary] = balances[_beneficiary].add(_tokenAmount);
+        tokensIssued = tokensIssued.add(_tokenAmount);
+        emit TokenAdded(_beneficiary, _tokenAmount);
     }
 
     /**
